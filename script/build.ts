@@ -19,9 +19,9 @@ await esbuild.build({
   entryPoints: [path.join(root, "server/src/index.ts")],
   bundle: true,
   platform: "node",
-  format: "esm",
-  outfile: path.join(root, "dist/index.js"),
-  external: ["better-sqlite3", "bcryptjs", "vite", "lightningcss", "esbuild", "dotenv"],
+  format: "cjs",
+  outfile: path.join(root, "dist/index.cjs"),
+  external: ["better-sqlite3", "bcryptjs", "vite", "lightningcss", "esbuild"],
   sourcemap: true,
 });
 

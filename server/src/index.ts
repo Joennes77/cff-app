@@ -88,17 +88,6 @@ app.use("/api/rounds", requireAuth, roundsRouter);
 app.use("/api/admin", requireAdmin, adminRouter);
 
 /* ----------------------------------------------------------------
- * Static / Vite dev server
- * ---------------------------------------------------------------- */
-if (process.env.NODE_ENV === "production") {
-  const { serveStatic } = await import("./static.js");
-  serveStatic(app);
-} else {
-  const { setupVite } = await import("./vite.js");
-  await setupVite(httpServer, app);
-}
-
-/* ----------------------------------------------------------------
  * Error handler
  * ---------------------------------------------------------------- */
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
@@ -111,7 +100,22 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 /* ----------------------------------------------------------------
  * Start
  * ---------------------------------------------------------------- */
-const port = parseInt(process.env.PORT ?? "5000", 10);
-httpServer.listen({ port, host: "0.0.0.0" }, () => {
-  console.log(`CFF server running on port ${port}`);
+async function main() {
+  if (process.env.NODE_ENV === "production") {
+    const { serveStatic } = await import("./static.js");
+    serveStatic(app);
+  } else {
+    const { setupVite } = await import("./vite.js");
+    await setupVite(httpServer, app);
+  }
+
+  const port = parseInt(process.env.PORT ?? "5000", 10);
+  httpServer.listen({ port, host: "0.0.0.0" }, () => {
+    console.log(`CFF server running on port ${port}`);
+  });
+}
+
+main().catch((err) => {
+  console.error("Failed to start server:", err);
+  process.exit(1);
 });
