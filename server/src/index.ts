@@ -9,8 +9,9 @@ import { teamsRouter } from "./routes/teams.js";
 import { roundsRouter } from "./routes/rounds.js";
 import { adminRouter } from "./routes/admin.js";
 import { db } from "./db/index.js";
-import { users } from "../../shared/schema.js";
+import { users, players } from "../../shared/schema.js";
 import { eq } from "drizzle-orm";
+import { ensurePlayers } from "./db/seed.js";
 import type { AuthedRequest, Sessions } from "./types.js";
 
 const app = express();
@@ -101,6 +102,8 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
  * Start
  * ---------------------------------------------------------------- */
 async function main() {
+  await ensurePlayers();
+
   if (process.env.NODE_ENV === "production") {
     const { serveStatic } = await import("./static.js");
     serveStatic(app);

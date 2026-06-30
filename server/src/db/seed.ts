@@ -1,29 +1,13 @@
 /**
  * Seed file — ~60 real Eredivisie players across 6 clubs.
  * Run with: npm run db:seed
+ * Also exports ensurePlayers() for auto-seed on startup.
  */
 import "dotenv/config";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { players } from "../../../shared/schema.js";
-
-const DB_PATH = process.env.DB_PATH ?? "./data.db";
-const sqlite = new Database(DB_PATH);
-sqlite.pragma("journal_mode = WAL");
-
-// Ensure table exists
-sqlite.exec(`
-  CREATE TABLE IF NOT EXISTS players (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    club TEXT NOT NULL,
-    position TEXT NOT NULL,
-    price REAL NOT NULL,
-    image_url TEXT
-  );
-`);
-
-const db = drizzle(sqlite);
+import { db } from "./index.js";
 
 const PLAYERS: Array<Omit<typeof players.$inferInsert, "id">> = [
   // === AJAX ===
@@ -56,7 +40,6 @@ const PLAYERS: Array<Omit<typeof players.$inferInsert, "id">> = [
   { name: "Timon Wellenreuther", club: "Feyenoord", position: "GK", price: 7.0 },
   { name: "David Hancko", club: "Feyenoord", position: "DEF", price: 14.0 },
   { name: "Gernot Trauner", club: "Feyenoord", position: "DEF", price: 10.0 },
-  { name: "Dávid Hancko", club: "Feyenoord", position: "DEF", price: 12.0 },
   { name: "Hugo Bueno", club: "Feyenoord", position: "DEF", price: 7.5 },
   { name: "Quinten Timber", club: "Feyenoord", position: "MID", price: 16.0 },
   { name: "Ramiz Zerrouki", club: "Feyenoord", position: "MID", price: 9.0 },
@@ -92,7 +75,6 @@ const PLAYERS: Array<Omit<typeof players.$inferInsert, "id">> = [
   { name: "Mees Hilgers", club: "FC Twente", position: "DEF", price: 9.0 },
   { name: "Julio Pleguezuelo", club: "FC Twente", position: "DEF", price: 6.0 },
   { name: "Gijs Smal", club: "FC Twente", position: "DEF", price: 5.5 },
-  { name: "Ramiz Zerrouki", club: "FC Twente", position: "MID", price: 8.0 },
   { name: "Sem Steijn", club: "FC Twente", position: "MID", price: 12.0 },
   { name: "Michel Vlap", club: "FC Twente", position: "MID", price: 8.0 },
   { name: "Daan Rots", club: "FC Twente", position: "FWD", price: 9.5 },
@@ -100,17 +82,24 @@ const PLAYERS: Array<Omit<typeof players.$inferInsert, "id">> = [
   { name: "Joshua Brenet", club: "FC Twente", position: "DEF", price: 5.0 },
 ];
 
-async function seed() {
-  console.log("Seeding players...");
-  // Delete existing players
-  await db.delete(players);
-  // Insert all players
-  await db.insert(players).values(PLAYERS);
-  console.log(`Inserted ${PLAYERS.length} players.`);
-  sqlite.close();
+/** Auto-seed players on startup if the table is empty. */
+export async function ensurePlayers() {
+  const existing = db.select().from(players).all();
+  if (existing.length === 0) {
+    await db.insert(players).values(PLAYERS);
+    console.log(`Auto-seeded ${PLAYERS.length} players.`);
+  }
 }
 
-seed().catch((err) => {
-  console.error("Seed failed:", err);
-  process.exit(1);
-});
+// Allow running directly: npm run db:seed
+if (process.argv[1]?.includes("seed")) {
+  (async () => {
+    console.log("Seeding players...");
+    await db.delete(players);
+    await db.insert(players).values(PLAYERS);
+    console.log(`Inserted ${PLAYERS.length} players.`);
+  })().catch((err) => {
+    console.error("Seed failed:", err);
+    process.exit(1);
+  });
+}
