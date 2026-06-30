@@ -9,7 +9,7 @@ import { teamsRouter } from "./routes/teams.js";
 import { roundsRouter } from "./routes/rounds.js";
 import { adminRouter } from "./routes/admin.js";
 import { db } from "./db/index.js";
-import { users, players } from "../../shared/schema.js";
+import { users } from "../../shared/schema.js";
 import { eq } from "drizzle-orm";
 import { ensurePlayers } from "./db/seed.js";
 import type { AuthedRequest, Sessions } from "./types.js";
@@ -101,8 +101,15 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
 /* ----------------------------------------------------------------
  * Start
  * ---------------------------------------------------------------- */
+async function ensureAdmin() {
+  const email = process.env.ADMIN_EMAIL;
+  if (!email) return;
+  await db.update(users).set({ isAdmin: 1 }).where(eq(users.email, email));
+}
+
 async function main() {
   await ensurePlayers();
+  await ensureAdmin();
 
   if (process.env.NODE_ENV === "production") {
     const { serveStatic } = await import("./static.js");
