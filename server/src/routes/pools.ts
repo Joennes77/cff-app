@@ -10,6 +10,7 @@ import {
   playerStats,
   roundPredictions,
   rounds,
+  users,
   createPoolSchema,
   joinPoolSchema,
 } from "../../../shared/schema.js";
@@ -103,6 +104,7 @@ poolsRouter.get("/:id/standings", async (req: AuthedRequest, res) => {
   const allStats = db.select().from(playerStats).all();
   const allPlayers = db.select().from(players).all();
   const allPredictions = db.select().from(roundPredictions).where(eq(roundPredictions.poolId, poolId)).all();
+  const allUsers = db.select().from(users).all();
 
   const standings = members.map((m) => {
     const team = db
@@ -157,7 +159,8 @@ poolsRouter.get("/:id/standings", async (req: AuthedRequest, res) => {
       }
     }
 
-    return { userId: m.userId, points, hasTeam: !!team };
+    const user = allUsers.find((u) => u.id === m.userId);
+    return { userId: m.userId, username: user?.username ?? "Onbekend", points, hasTeam: !!team };
   });
 
   standings.sort((a, b) => b.points - a.points);
