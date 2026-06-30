@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---- Light mode ---- */
+:root {
+  --background: 210 20% 98%;
+  --foreground: 220 26% 12%;
+  --border: 220 14% 88%;
+  --card: 0 0% 100%;
+  --card-foreground: 220 26% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 220 26% 12%;
+  --primary: 142 72% 35%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 14% 92%;
+  --secondary-foreground: 220 26% 14%;
+  --muted: 220 14% 94%;
+  --muted-foreground: 220 10% 44%;
+  --accent: 142 50% 90%;
+  --accent-foreground: 142 72% 20%;
+  --destructive: 4 74% 47%;
+  --destructive-foreground: 0 0% 98%;
+  --input: 220 14% 84%;
+  --ring: 142 72% 35%;
+  --sidebar: 220 30% 13%;
+  --sidebar-foreground: 210 20% 88%;
+  --sidebar-border: 220 22% 22%;
+  --sidebar-primary: 142 72% 42%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 220 22% 22%;
+  --sidebar-accent-foreground: 210 20% 92%;
+  --sidebar-ring: 142 72% 42%;
+  --radius: 0.5rem;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: "Montserrat", system-ui, sans-serif;
+  --font-mono: ui-monospace, monospace;
+}
+
+/* ---- Dark mode ---- */
+.dark {
+  --background: 222 28% 10%;
+  --foreground: 210 20% 92%;
+  --border: 220 22% 22%;
+  --card: 222 28% 13%;
+  --card-foreground: 210 20% 92%;
+  --popover: 222 28% 13%;
+  --popover-foreground: 210 20% 92%;
+  --primary: 142 60% 45%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 22% 20%;
+  --secondary-foreground: 210 20% 88%;
+  --muted: 220 22% 18%;
+  --muted-foreground: 220 10% 55%;
+  --accent: 142 40% 22%;
+  --accent-foreground: 142 60% 80%;
+  --destructive: 4 74% 55%;
+  --destructive-foreground: 0 0% 98%;
+  --input: 220 22% 24%;
+  --ring: 142 60% 45%;
+  --sidebar: 222 30% 9%;
+  --sidebar-foreground: 210 20% 88%;
+  --sidebar-border: 220 22% 18%;
+  --sidebar-primary: 142 60% 45%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 220 22% 18%;
+  --sidebar-accent-foreground: 210 20% 92%;
+  --sidebar-ring: 142 60% 45%;
+}
+
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Position badge colours */
+.badge-gk  { background: hsl(45 96% 50%); color: hsl(220 40% 10%); }
+.badge-def { background: hsl(214 80% 50%); color: #fff; }
+.badge-mid { background: hsl(142 60% 40%); color: #fff; }
+.badge-fwd { background: hsl(4 80% 52%);   color: #fff; }
