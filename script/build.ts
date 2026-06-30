@@ -21,7 +21,7 @@ await esbuild.build({
   platform: "node",
   format: "esm",
   outfile: path.join(root, "dist/index.js"),
-  external: ["better-sqlite3", "bcryptjs", "vite", "lightningcss", "esbuild"],
+  external: ["better-sqlite3", "bcryptjs", "vite", "lightningcss", "esbuild", "dotenv"],
   sourcemap: true,
 });
 
