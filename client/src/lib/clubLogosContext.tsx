@@ -1,26 +1,16 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
-import { apiFetch } from "./queryClient";
+import { createContext, useContext, type ReactNode } from "react";
+import { CLUB_LOGOS } from "./clubs";
 
-type LogoMap = Record<string, string>;
-
-const ClubLogosContext = createContext<LogoMap>({});
+const ClubLogosContext = createContext(CLUB_LOGOS);
 
 export function ClubLogosProvider({ children }: { children: ReactNode }) {
-  const [logos, setLogos] = useState<LogoMap>({});
-
-  useEffect(() => {
-    apiFetch("/api/club-logos")
-      .then((data: LogoMap) => setLogos(data))
-      .catch(() => { /* logos stay empty — components show initials */ });
-  }, []);
-
   return (
-    <ClubLogosContext.Provider value={logos}>
+    <ClubLogosContext.Provider value={CLUB_LOGOS}>
       {children}
     </ClubLogosContext.Provider>
   );
 }
 
-export function useClubLogos(): LogoMap {
+export function useClubLogos() {
   return useContext(ClubLogosContext);
 }
