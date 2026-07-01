@@ -1,0 +1,77 @@
+<svg viewBox="0 0 280 320" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="sc">
+      <path d="M 18,22 L 262,22 L 262,208 Q 262,272 140,302 Q 18,272 18,208 Z"/>
+    </clipPath>
+    <linearGradient id="shieldBg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0c1525"/>
+      <stop offset="100%" stop-color="#060c18"/>
+    </linearGradient>
+    <linearGradient id="almeloBlue" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#1565c0"/>
+      <stop offset="100%" stop-color="#0d47a1"/>
+    </linearGradient>
+    <linearGradient id="felBlauw" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#42a5f5"/>
+      <stop offset="100%" stop-color="#1e88e5"/>
+    </linearGradient>
+    <linearGradient id="heraclesDark" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#0a1020"/>
+      <stop offset="50%" stop-color="#0f1a30"/>
+      <stop offset="100%" stop-color="#0a1020"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Shield -->
+  <path d="M 18,22 L 262,22 L 262,208 Q 262,272 140,302 Q 18,272 18,208 Z"
+        fill="url(#shieldBg)"/>
+  <path d="M 18,22 L 262,22 L 262,208 Q 262,272 140,302 Q 18,272 18,208 Z"
+        fill="none" stroke="url(#felBlauw)" stroke-width="4"/>
+
+  <!-- Top band -->
+  <rect x="18" y="22" width="244" height="46" fill="url(#almeloBlue)" clip-path="url(#sc)"/>
+  <rect x="18" y="64" width="244" height="3" fill="#42a5f5" opacity="0.7" clip-path="url(#sc)"/>
+  <text x="140" y="52" text-anchor="middle" font-size="14"
+        fill="white" font-family="serif" letter-spacing="14" opacity="0.95">★ ★ ★</text>
+
+  <!-- Heracles stripe -->
+  <rect x="18" y="67" width="244" height="8" fill="url(#heraclesDark)" clip-path="url(#sc)"/>
+
+  <!-- Split -->
+  <rect x="18"  y="75" width="122" height="130" fill="#0d1a2e" opacity="0.6" clip-path="url(#sc)"/>
+  <rect x="140" y="75" width="122" height="130" fill="#080f1c" opacity="0.6" clip-path="url(#sc)"/>
+  <line x1="140" y1="75" x2="140" y2="200" stroke="#42a5f5" stroke-width="1.5" opacity="0.25"/>
+
+  <!-- Football -->
+  <circle cx="140" cy="100" r="19" fill="#0a1525" stroke="url(#felBlauw)" stroke-width="2.5"/>
+  <polygon points="140,86 149,93 146,103 134,103 131,93"
+           fill="none" stroke="white" stroke-width="1.4" opacity="0.9"/>
+
+  <!-- CFF -->
+  <text x="143" y="183" text-anchor="middle"
+        font-family="Arial Black, Impact, sans-serif"
+        font-size="108" font-weight="900" letter-spacing="-4"
+        fill="#1565c0" opacity="0.25">CFF</text>
+  <text x="140" y="180" text-anchor="middle"
+        font-family="Arial Black, Impact, sans-serif"
+        font-size="108" font-weight="900" letter-spacing="-4"
+        fill="white" opacity="0.97">CFF</text>
+
+  <!-- Divider -->
+  <line x1="35" y1="197" x2="245" y2="197" stroke="#42a5f5" stroke-width="1.5" opacity="0.7"/>
+
+  <!-- Bottom banner -->
+  <rect x="18" y="197" width="244" height="40" fill="url(#almeloBlue)" opacity="0.85" clip-path="url(#sc)"/>
+  <text x="140" y="214" text-anchor="middle"
+        font-family="Arial Black, Impact, sans-serif"
+        font-size="11.5" font-weight="900" letter-spacing="3.5"
+        fill="white">CHAMPIONSHIP</text>
+  <text x="140" y="235" text-anchor="middle"
+        font-family="Arial Black, Impact, sans-serif"
+        font-size="10" font-weight="900" letter-spacing="2.5"
+        fill="#bbdefb" opacity="0.92">FOOTBALL FACTORY</text>
+
+  <!-- Corner ornaments -->
+  <text x="45"  y="188" font-size="9" fill="#42a5f5" opacity="0.55" font-family="serif">✦</text>
+  <text x="224" y="188" font-size="9" fill="#42a5f5" opacity="0.55" font-family="serif">✦</text>
+</svg>
