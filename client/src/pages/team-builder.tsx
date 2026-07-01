@@ -4,6 +4,7 @@ import { useParams } from "wouter";
 import { apiFetch } from "../lib/queryClient";
 import { useAuth } from "../lib/auth";
 import { PlayerCard, FormationSlot } from "../components/player-card";
+import { getClubLogo } from "../lib/clubs";
 import type { Player, TeamWithPlayers, TransferWindow } from "@shared/schema";
 
 const BUDGET = 250;
@@ -263,53 +264,236 @@ export default function TeamBuilder() {
           </button>
         </div>
 
-        {/* ── RIGHT: Player picker ── */}
-        <div className="bg-card border border-border/50 rounded-2xl overflow-hidden flex flex-col" style={{ height: "calc(100vh - 160px)", minHeight: 520 }}>
-          {/* Header */}
-          <div className="px-4 pt-4 pb-3 border-b border-border/50 space-y-3">
-            <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase">Selecteer spelers</p>
+        {/* ── RIGHT: Club browser ── */}
+        <ClubBrowser
+          allPlayers={allPlayers}
+          selectedIds={selectedIds}
+          starterIds={starterIds}
+          onToggle={togglePlayer}
+          filterPos={filterPos}
+          setFilterPos={setFilterPos}
+          search={search}
+          setSearch={setSearch}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ─── Club Browser Component ───────────────────────────────────────────────────
+
+const POS_PILLS = [
+  { key: "", label: "Alle" },
+  { key: "GK", label: "GK", cls: "badge-gk" },
+  { key: "DEF", label: "DEF", cls: "badge-def" },
+  { key: "MID", label: "MID", cls: "badge-mid" },
+  { key: "FWD", label: "FWD", cls: "badge-fwd" },
+];
+
+function ClubBrowser({
+  allPlayers,
+  selectedIds,
+  starterIds,
+  onToggle,
+  filterPos,
+  setFilterPos,
+  search,
+  setSearch,
+}: {
+  allPlayers: Player[];
+  selectedIds: Set<number>;
+  starterIds: number[];
+  onToggle: (p: Player) => void;
+  filterPos: string;
+  setFilterPos: (v: string) => void;
+  search: string;
+  setSearch: (v: string) => void;
+}) {
+  const [selectedClub, setSelectedClub] = useState<string | null>(null);
+
+  // Players shown in list
+  const visiblePlayers = useMemo(() => {
+    let list = allPlayers;
+    if (selectedClub) list = list.filter((p) => p.club === selectedClub);
+    if (filterPos) list = list.filter((p) => p.position === filterPos);
+    if (search) list = list.filter((p) => p.name.toLowerCase().includes(search.toLowerCase()));
+    return list;
+  }, [allPlayers, selectedClub, filterPos, search]);
+
+  // Stats for selected club
+  const clubPlayers = useMemo(
+    () => (selectedClub ? allPlayers.filter((p) => p.club === selectedClub) : []),
+    [allPlayers, selectedClub]
+  );
+  const selectedCount = useMemo(
+    () => clubPlayers.filter((p) => selectedIds.has(p.id)).length,
+    [clubPlayers, selectedIds]
+  );
+
+  return (
+    <div
+      className="bg-card border border-border/50 rounded-2xl overflow-hidden flex flex-col"
+      style={{ height: "calc(100vh - 160px)", minHeight: 560 }}
+    >
+      {/* ── Club grid or Club hero ── */}
+      {!selectedClub ? (
+        /* Club selector grid */
+        <div className="flex-1 overflow-y-auto">
+          <div className="px-4 pt-4 pb-2 border-b border-border/50">
+            <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase mb-3">
+              Kies een club
+            </p>
             <input
-              className="w-full border border-input rounded-xl px-3 py-2.5 text-sm bg-background/60 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-              placeholder="Zoek speler…"
+              className="w-full border border-input rounded-xl px-3 py-2 text-sm bg-background/60 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+              placeholder="Of zoek direct een speler…"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
-            <div className="flex gap-2">
-              <select
-                className="flex-1 border border-input rounded-xl px-2 py-2 text-xs bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                value={filterClub}
-                onChange={(e) => setFilterClub(e.target.value)}
-              >
-                <option value="">Alle clubs</option>
-                {CLUBS.map((c) => <option key={c}>{c}</option>)}
-              </select>
-              <select
-                className="flex-1 border border-input rounded-xl px-2 py-2 text-xs bg-background focus:outline-none focus:ring-1 focus:ring-primary"
-                value={filterPos}
-                onChange={(e) => setFilterPos(e.target.value)}
-              >
-                <option value="">Alle posities</option>
-                {POSITIONS.map((p) => <option key={p}>{p}</option>)}
-              </select>
+          </div>
+
+          {search ? (
+            /* Search results across all clubs */
+            <div className="p-3 space-y-1.5">
+              <p className="text-xs text-muted-foreground px-1 mb-2">{visiblePlayers.length} spelers gevonden</p>
+              {visiblePlayers.map((p) => (
+                <PlayerCard
+                  key={p.id}
+                  player={p}
+                  selected={selectedIds.has(p.id)}
+                  isStarter={starterIds.includes(p.id)}
+                  onToggle={() => onToggle(p)}
+                  compact
+                />
+              ))}
             </div>
-            <p className="text-xs text-muted-foreground">{filteredPlayers.length} spelers</p>
+          ) : (
+            /* 3-column club logo grid */
+            <div className="p-3 grid grid-cols-3 gap-2">
+              {CLUBS.map((club) => {
+                const logo = getClubLogo(club);
+                const count = allPlayers.filter((p) => p.club === club && selectedIds.has(p.id)).length;
+                return (
+                  <button
+                    key={club}
+                    onClick={() => setSelectedClub(club)}
+                    className="group relative flex flex-col items-center gap-2 p-3 rounded-xl border border-border/40 bg-background/40 hover:border-primary/50 hover:bg-primary/5 transition-all"
+                  >
+                    {count > 0 && (
+                      <span className="absolute top-1.5 right-1.5 bg-primary text-black text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                        {count}
+                      </span>
+                    )}
+                    {logo ? (
+                      <img
+                        src={logo}
+                        alt={club}
+                        className="w-10 h-10 object-contain group-hover:scale-110 transition-transform"
+                        onError={(e) => { e.currentTarget.style.display = "none"; }}
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center text-xs font-bold text-muted-foreground">
+                        {club.slice(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                    <span className="text-[10px] font-semibold text-center text-muted-foreground group-hover:text-foreground leading-tight line-clamp-2 transition-colors">
+                      {club}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      ) : (
+        /* ── Club detail view ── */
+        <div className="flex flex-col flex-1 min-h-0">
+          {/* Club hero */}
+          <div className="relative shrink-0 overflow-hidden">
+            <div className="pitch-bg absolute inset-0 opacity-60" />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-card/95" />
+            <div className="relative z-10 px-4 pt-5 pb-4">
+              {/* Back button */}
+              <button
+                onClick={() => setSelectedClub(null)}
+                className="flex items-center gap-1.5 text-xs text-white/60 hover:text-white mb-4 transition-colors"
+              >
+                ← Alle clubs
+              </button>
+
+              {/* Logo + name */}
+              <div className="flex items-center gap-4">
+                {getClubLogo(selectedClub) ? (
+                  <img
+                    src={getClubLogo(selectedClub)!}
+                    alt={selectedClub}
+                    className="w-20 h-20 object-contain drop-shadow-2xl"
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
+                  />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center text-2xl font-bold text-white">
+                    {selectedClub.slice(0, 2).toUpperCase()}
+                  </div>
+                )}
+                <div>
+                  <h2 className="font-display text-3xl tracking-wider text-white leading-tight">
+                    {selectedClub}
+                  </h2>
+                  <div className="flex gap-3 mt-1.5">
+                    <span className="text-xs text-white/50">{clubPlayers.length} spelers</span>
+                    {selectedCount > 0 && (
+                      <span className="text-xs text-primary font-semibold">{selectedCount} geselecteerd</span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Position filter + search */}
+          <div className="shrink-0 px-3 py-2.5 border-b border-border/50 space-y-2">
+            <div className="flex gap-1.5 flex-wrap">
+              {POS_PILLS.map(({ key, label, cls }) => (
+                <button
+                  key={key}
+                  onClick={() => setFilterPos(key)}
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${
+                    filterPos === key
+                      ? cls
+                        ? cls
+                        : "bg-foreground text-background"
+                      : "bg-muted/50 text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <input
+              className="w-full border border-input rounded-lg px-3 py-1.5 text-sm bg-background/60 focus:outline-none focus:ring-1 focus:ring-primary transition-all"
+              placeholder="Zoek in selectie…"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
 
           {/* Player list */}
-          <div className="flex-1 overflow-y-auto p-2 space-y-1">
-            {filteredPlayers.map((p) => (
+          <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+            {visiblePlayers.map((p) => (
               <PlayerCard
                 key={p.id}
                 player={p}
                 selected={selectedIds.has(p.id)}
                 isStarter={starterIds.includes(p.id)}
-                onToggle={() => togglePlayer(p)}
+                onToggle={() => onToggle(p)}
                 compact
               />
             ))}
+            {visiblePlayers.length === 0 && (
+              <p className="text-center text-xs text-muted-foreground py-8">Geen spelers gevonden</p>
+            )}
           </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
