@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db } from "../db/index.js";
-import { rounds, playerStats, users, players } from "../../../shared/schema.js";
+import { rounds, playerStats, users, players, transferWindows } from "../../../shared/schema.js";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import type { AuthedRequest } from "../types.js";
@@ -119,6 +119,37 @@ adminRouter.patch("/users/:id/admin", async (req: AuthedRequest, res) => {
 adminRouter.get("/rounds", async (_req, res) => {
   const all = db.select().from(rounds).all();
   return res.json(all);
+});
+
+// GET /api/admin/transfer-windows
+adminRouter.get("/transfer-windows", async (_req, res) => {
+  const all = db.select().from(transferWindows).all();
+  return res.json(all);
+});
+
+// POST /api/admin/transfer-windows
+adminRouter.post("/transfer-windows", async (req, res) => {
+  const { windowNumber, startDate, endDate, isOpen } = req.body as {
+    windowNumber: number; startDate: string; endDate: string; isOpen?: boolean;
+  };
+  const existing = db.select().from(transferWindows).where(eq(transferWindows.windowNumber, windowNumber)).get();
+  if (existing) {
+    const [updated] = await db.update(transferWindows)
+      .set({ startDate, endDate, isOpen: isOpen ? 1 : existing.isOpen })
+      .where(eq(transferWindows.id, existing.id)).returning();
+    return res.json(updated);
+  }
+  const [created] = await db.insert(transferWindows).values({ windowNumber, startDate, endDate, isOpen: isOpen ? 1 : 0 }).returning();
+  return res.status(201).json(created);
+});
+
+// PATCH /api/admin/transfer-windows/:id/toggle
+adminRouter.patch("/transfer-windows/:id/toggle", async (req, res) => {
+  const id = parseInt(req.params.id);
+  const win = db.select().from(transferWindows).where(eq(transferWindows.id, id)).get();
+  if (!win) return res.status(404).json({ message: "Niet gevonden" });
+  const [updated] = await db.update(transferWindows).set({ isOpen: win.isOpen ? 0 : 1 }).where(eq(transferWindows.id, id)).returning();
+  return res.json(updated);
 });
 
 // PATCH /api/admin/rounds/:id/activate — set a round active

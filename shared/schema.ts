@@ -151,6 +151,19 @@ export const roundPredictions = sqliteTable("round_predictions", {
 export type RoundPrediction = typeof roundPredictions.$inferSelect;
 
 /* ----------------------------------------------------------------
+ * Transfer windows
+ * ---------------------------------------------------------------- */
+export const transferWindows = sqliteTable("transfer_windows", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  windowNumber: integer("window_number").notNull(), // 1 | 2 | 3
+  isOpen: integer("is_open").notNull().default(0),
+  startDate: text("start_date").notNull(),
+  endDate: text("end_date").notNull(),
+});
+
+export type TransferWindow = typeof transferWindows.$inferSelect;
+
+/* ----------------------------------------------------------------
  * Transfers
  * ---------------------------------------------------------------- */
 export const transfers = sqliteTable("transfers", {

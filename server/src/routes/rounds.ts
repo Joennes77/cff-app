@@ -4,6 +4,7 @@ import {
   rounds,
   roundPredictions,
   poolMembers,
+  transferWindows,
   predictionSchema,
 } from "../../../shared/schema.js";
 import { eq, and } from "drizzle-orm";
@@ -21,6 +22,12 @@ roundsRouter.get("/active", (_req, res) => {
 roundsRouter.get("/", (_req, res) => {
   const all = db.select().from(rounds).all();
   return res.json(all);
+});
+
+// GET /api/rounds/transfer-window — active transfer window
+roundsRouter.get("/transfer-window", (_req, res) => {
+  const win = db.select().from(transferWindows).where(eq(transferWindows.isOpen, 1)).get();
+  return res.json(win ?? null);
 });
 
 // POST /api/rounds/:id/predictions — save prediction for a round

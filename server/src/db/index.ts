@@ -93,6 +93,14 @@ sqlite.exec(`
     player_in_id INTEGER NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now'))
   );
+
+  CREATE TABLE IF NOT EXISTS transfer_windows (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    window_number INTEGER NOT NULL,
+    is_open INTEGER NOT NULL DEFAULT 0,
+    start_date TEXT NOT NULL,
+    end_date TEXT NOT NULL
+  );
 `);
 
 export const db = drizzle(sqlite);

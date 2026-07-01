@@ -4,7 +4,7 @@ import { useParams } from "wouter";
 import { apiFetch } from "../lib/queryClient";
 import { useAuth } from "../lib/auth";
 import { PlayerCard, FormationSlot } from "../components/player-card";
-import type { Player, TeamWithPlayers } from "@shared/schema";
+import type { Player, TeamWithPlayers, TransferWindow } from "@shared/schema";
 
 const BUDGET = 250;
 const CLUBS = ["Ajax", "PSV", "Feyenoord", "AZ", "FC Utrecht", "FC Twente"];
@@ -14,6 +14,12 @@ export default function TeamBuilder() {
   const { id: poolId } = useParams<{ id: string }>();
   const { authFetch } = useAuth();
   const qc = useQueryClient();
+
+  // Active transfer window
+  const { data: transferWindow } = useQuery<TransferWindow | null>({
+    queryKey: ["/api/rounds/transfer-window"],
+    queryFn: () => apiFetch("/api/rounds/transfer-window"),
+  });
 
   // Current team from server
   const { data: existingTeam } = useQuery<TeamWithPlayers | null>({
@@ -105,6 +111,8 @@ export default function TeamBuilder() {
 
   const budgetOk = totalPrice <= BUDGET;
   const teamComplete = starterIds.length === 11 && subIds.length === 5;
+  const hasExistingTeam = !!existingTeam;
+  const canSave = !hasExistingTeam || !!transferWindow;
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -181,9 +189,19 @@ export default function TeamBuilder() {
           {/* Save */}
           {error && <p className="text-sm text-destructive">{error}</p>}
           {success && <p className="text-sm text-primary">Team opgeslagen!</p>}
+          {hasExistingTeam && !transferWindow && (
+            <p className="text-sm text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              Je team is vergrendeld. Transfers zijn alleen mogelijk tijdens een open transferwindow.
+            </p>
+          )}
+          {transferWindow && (
+            <p className="text-sm text-primary bg-primary/5 border border-primary/20 rounded-lg px-3 py-2">
+              Transferwindow {transferWindow.windowNumber} is open t/m {new Date(transferWindow.endDate).toLocaleDateString("nl-NL")}.
+            </p>
+          )}
           <button
             onClick={() => saveMutation.mutate()}
-            disabled={!teamComplete || !budgetOk || saveMutation.isPending}
+            disabled={!teamComplete || !budgetOk || saveMutation.isPending || !canSave}
             className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold disabled:opacity-40 hover:bg-primary/90 transition-colors"
           >
             {saveMutation.isPending ? "Opslaan…" : "Team opslaan"}

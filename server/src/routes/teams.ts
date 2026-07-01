@@ -5,6 +5,8 @@ import {
   userTeamPlayers,
   players,
   poolMembers,
+  transferWindows,
+  transfers,
   saveTeamSchema,
 } from "../../../shared/schema.js";
 import { eq, and } from "drizzle-orm";
@@ -90,19 +92,44 @@ teamsRouter.post("/:poolId", async (req: AuthedRequest, res) => {
 
   const now = new Date().toISOString();
 
-  // Upsert team
-  let team = db
+  // Check if this is an update (existing team) — if so, require open transfer window
+  const existingTeamCheck = db
     .select()
     .from(userTeams)
     .where(and(eq(userTeams.userId, req.userId!), eq(userTeams.poolId, poolId)))
     .get();
 
+  if (existingTeamCheck) {
+    const openWindow = db.select().from(transferWindows).where(eq(transferWindows.isOpen, 1)).get();
+    if (!openWindow) {
+      return res.status(403).json({ message: "Er is geen open transferwindow. Je kunt je team nu niet wijzigen." });
+    }
+  }
+
+  // Upsert team
+  let team = existingTeamCheck;
+
   if (team) {
-    await db
-      .update(userTeams)
-      .set({ updatedAt: now })
-      .where(eq(userTeams.id, team.id));
-    // Delete old player assignments
+    // Log transfers (players that changed)
+    const oldPlayers = db.select().from(userTeamPlayers).where(eq(userTeamPlayers.userTeamId, team.id)).all();
+    const oldIds = new Set(oldPlayers.map((p) => p.playerId));
+    const newIds = new Set(allIds);
+    const removedIds = [...oldIds].filter((id) => !newIds.has(id));
+    const addedIds = [...newIds].filter((id) => !oldIds.has(id));
+    const openWindow = db.select().from(transferWindows).where(eq(transferWindows.isOpen, 1)).get();
+
+    for (let i = 0; i < Math.min(removedIds.length, addedIds.length); i++) {
+      await db.insert(transfers).values({
+        userId: req.userId!,
+        poolId,
+        transferWindowNumber: openWindow!.windowNumber,
+        playerOutId: removedIds[i],
+        playerInId: addedIds[i],
+        createdAt: now,
+      });
+    }
+
+    await db.update(userTeams).set({ updatedAt: now }).where(eq(userTeams.id, team.id));
     await db.delete(userTeamPlayers).where(eq(userTeamPlayers.userTeamId, team.id));
   } else {
     const [newTeam] = await db

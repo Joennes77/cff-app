@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "../lib/queryClient";
 import { useAuth } from "../lib/auth";
-import type { Round, Player } from "@shared/schema";
+import type { Round, Player, TransferWindow } from "@shared/schema";
 
 export default function AdminPage() {
   const { authFetch, user } = useAuth();
@@ -25,6 +25,36 @@ export default function AdminPage() {
   const { data: rounds = [] } = useQuery<Round[]>({
     queryKey: ["/api/rounds"],
     queryFn: () => apiFetch("/api/rounds"),
+  });
+
+  const { data: transferWindows = [] } = useQuery<TransferWindow[]>({
+    queryKey: ["/api/admin/transfer-windows"],
+    queryFn: () => apiFetch("/api/admin/transfer-windows"),
+  });
+
+  const [twNumber, setTwNumber] = useState("");
+  const [twStart, setTwStart] = useState("");
+  const [twEnd, setTwEnd] = useState("");
+  const [twMsg, setTwMsg] = useState("");
+
+  const saveTw = useMutation({
+    mutationFn: () =>
+      authFetch("POST", "/api/admin/transfer-windows", {
+        windowNumber: parseInt(twNumber),
+        startDate: twStart,
+        endDate: twEnd,
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["/api/admin/transfer-windows"] });
+      setTwMsg("Transferwindow opgeslagen!");
+      setTimeout(() => setTwMsg(""), 2000);
+    },
+    onError: (e: Error) => setTwMsg(e.message),
+  });
+
+  const toggleTw = useMutation({
+    mutationFn: (id: number) => authFetch("PATCH", `/api/admin/transfer-windows/${id}/toggle`, {}),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["/api/admin/transfer-windows"] }),
   });
 
   const { data: players = [] } = useQuery<Player[]>({
@@ -189,6 +219,77 @@ export default function AdminPage() {
           className="px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground disabled:opacity-40"
         >
           {createRound.isPending ? "Opslaan…" : "Ronde opslaan"}
+        </button>
+      </section>
+
+      {/* Transfer windows */}
+      <section className="bg-card border rounded-xl p-6 space-y-4">
+        <h2 className="font-semibold text-lg">Transferwindows</h2>
+
+        {transferWindows.length > 0 && (
+          <table className="w-full text-sm mb-4">
+            <thead className="border-b">
+              <tr>
+                <th className="text-left py-2 font-medium text-muted-foreground">Window</th>
+                <th className="text-left py-2 font-medium text-muted-foreground">Start</th>
+                <th className="text-left py-2 font-medium text-muted-foreground">Einde</th>
+                <th className="text-left py-2 font-medium text-muted-foreground">Status</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {transferWindows.map((tw) => (
+                <tr key={tw.id}>
+                  <td className="py-2">Window {tw.windowNumber}</td>
+                  <td className="py-2 text-muted-foreground">{tw.startDate}</td>
+                  <td className="py-2 text-muted-foreground">{tw.endDate}</td>
+                  <td className="py-2">
+                    {tw.isOpen ? (
+                      <span className="text-primary font-semibold">Open</span>
+                    ) : (
+                      <span className="text-muted-foreground">Gesloten</span>
+                    )}
+                  </td>
+                  <td className="py-2">
+                    <button
+                      onClick={() => toggleTw.mutate(tw.id)}
+                      className="text-xs px-2 py-1 rounded border hover:bg-muted"
+                    >
+                      {tw.isOpen ? "Sluiten" : "Openen"}
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div>
+            <label className="text-xs font-medium block mb-1 text-muted-foreground">Window nr (1/2/3)</label>
+            <input
+              type="number" min={1} max={3}
+              className="w-full border rounded-md px-3 py-2 text-sm bg-background"
+              value={twNumber}
+              onChange={(e) => setTwNumber(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="text-xs font-medium block mb-1 text-muted-foreground">Startdatum</label>
+            <input type="date" className="w-full border rounded-md px-3 py-2 text-sm bg-background" value={twStart} onChange={(e) => setTwStart(e.target.value)} />
+          </div>
+          <div>
+            <label className="text-xs font-medium block mb-1 text-muted-foreground">Einddatum</label>
+            <input type="date" className="w-full border rounded-md px-3 py-2 text-sm bg-background" value={twEnd} onChange={(e) => setTwEnd(e.target.value)} />
+          </div>
+        </div>
+        {twMsg && <p className="text-sm text-primary">{twMsg}</p>}
+        <button
+          onClick={() => saveTw.mutate()}
+          disabled={saveTw.isPending || !twNumber || !twStart || !twEnd}
+          className="px-4 py-2 text-sm rounded-md bg-primary text-primary-foreground disabled:opacity-40"
+        >
+          {saveTw.isPending ? "Opslaan…" : "Window opslaan"}
         </button>
       </section>
 
