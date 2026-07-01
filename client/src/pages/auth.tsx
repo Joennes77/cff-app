@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useAuth } from "../lib/auth";
 import { CLUB_LOGOS, clubAbbr } from "../lib/clubs";
+import { CffLogo } from "../components/CffLogo";
 
 const CLUBS = Object.keys(CLUB_LOGOS);
 
@@ -120,8 +121,8 @@ export default function AuthPage() {
 
         {/* Central branding */}
         <div className="relative z-10 text-center select-none">
-          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-primary/20 border-2 border-primary/40 shadow-2xl shadow-primary/30 mb-6">
-            <span className="text-5xl">⚽</span>
+          <div className="mb-4">
+            <CffLogo size={120} />
           </div>
           <h1 className="font-display text-[clamp(5rem,10vw,9rem)] tracking-widest text-white leading-none drop-shadow-2xl">
             CFF
@@ -146,11 +147,10 @@ export default function AuthPage() {
 
         {/* Mobile logo (only visible on small screens) */}
         <div className="lg:hidden text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/20 border border-primary/30 mb-3">
-            <span className="text-3xl">⚽</span>
+          <div className="flex justify-center mb-2">
+            <CffLogo size={90} />
           </div>
-          <h1 className="font-display text-6xl tracking-widest text-white">CFF</h1>
-          <p className="text-primary text-xs font-bold tracking-widest uppercase mt-1">Championship Football Factory</p>
+          <p className="text-[#42a5f5] text-xs font-bold tracking-widest uppercase mt-1">Championship Football Factory</p>
         </div>
 
         <div className="w-full max-w-sm space-y-6 relative z-10">

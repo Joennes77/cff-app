@@ -1,5 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { useAuth } from "../lib/auth";
+import { CffLogo } from "./CffLogo";
 
 const links = [
   { href: "/", label: "Dashboard" },
@@ -16,10 +17,8 @@ export default function Navbar() {
       <div className="max-w-6xl mx-auto px-4 flex items-center gap-6 h-16">
         {/* Brand */}
         <Link href="/" className="flex items-center gap-2.5 shrink-0 group">
-          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-sm font-bold text-black shadow-lg shadow-primary/30">
-            ⚽
-          </div>
-          <span className="font-display text-2xl tracking-wider text-primary group-hover:text-primary/80 transition-colors">
+          <CffLogo size={38} />
+          <span className="font-display text-2xl tracking-wider text-white group-hover:text-white/80 transition-colors">
             CFF
           </span>
           <span className="hidden sm:block text-[10px] font-semibold text-muted-foreground tracking-widest uppercase border border-border/50 rounded px-1.5 py-0.5">
