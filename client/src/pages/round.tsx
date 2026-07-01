@@ -37,6 +37,22 @@ export default function RoundPage() {
     enabled: !!round && !!selectedPoolId,
   });
 
+  // Auto-select pool if only one
+  useState(() => {
+    if (pools.length === 1 && !selectedPoolId) setSelectedPoolId(pools[0].id);
+  });
+
+  // Load existing prediction into state
+  useState(() => {
+    if (existingPrediction) {
+      setTopscorerId(existingPrediction.predictedTopscorerId ?? "");
+      const ids = existingPrediction.predictedGoalscorerIds
+        ? JSON.parse(existingPrediction.predictedGoalscorerIds as string)
+        : [];
+      setGoalscorerIds(ids);
+    }
+  });
+
   const savePrediction = useMutation({
     mutationFn: () =>
       authFetch("POST", `/api/rounds/${round!.id}/predictions`, {
