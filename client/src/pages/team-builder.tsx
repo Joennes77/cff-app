@@ -7,7 +7,12 @@ import { PlayerCard, FormationSlot } from "../components/player-card";
 import type { Player, TeamWithPlayers, TransferWindow } from "@shared/schema";
 
 const BUDGET = 250;
-const CLUBS = ["Ajax", "PSV", "Feyenoord", "AZ", "FC Utrecht", "FC Twente"];
+const CLUBS = [
+  "Ajax", "PSV", "Feyenoord", "AZ", "FC Utrecht", "FC Twente",
+  "NEC Nijmegen", "Sparta Rotterdam", "Go Ahead Eagles", "PEC Zwolle",
+  "FC Groningen", "Heracles Almelo", "RKC Waalwijk", "NAC Breda",
+  "SC Heerenveen", "Willem II", "Almere City", "Fortuna Sittard",
+];
 const POSITIONS = ["GK", "DEF", "MID", "FWD"];
 
 export default function TeamBuilder() {
