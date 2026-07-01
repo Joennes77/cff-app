@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "../lib/queryClient";
 import { PlayerCard } from "../components/player-card";
-import { getClubLogo, clubAbbr } from "../lib/clubs";
+import { clubAbbr } from "../lib/clubs";
+import { useClubLogos } from "../lib/clubLogosContext";
 import type { Player } from "@shared/schema";
 
 const CLUBS = [
@@ -20,6 +21,7 @@ const POSITIONS = [
 ];
 
 export default function PlayersPage() {
+  const logos = useClubLogos();
   const [club, setClub] = useState("");
   const [position, setPosition] = useState("");
   const [search, setSearch] = useState("");
@@ -92,7 +94,7 @@ export default function PlayersPage() {
             Alle clubs
           </button>
           {CLUBS.map((c) => {
-            const logo = getClubLogo(c);
+            const logo = logos[c];
             const isActive = club === c;
             return (
               <button

@@ -11,6 +11,7 @@ import RoundPage from "./pages/round";
 import AdminPage from "./pages/admin";
 import NotFound from "./pages/not-found";
 import Navbar from "./components/navbar";
+import { ClubLogosProvider } from "./lib/clubLogosContext";
 
 function AppRouter() {
   return (
@@ -41,7 +42,9 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Shell />
+        <ClubLogosProvider>
+          <Shell />
+        </ClubLogosProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

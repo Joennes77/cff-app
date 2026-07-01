@@ -4,7 +4,7 @@ import { useParams } from "wouter";
 import { apiFetch } from "../lib/queryClient";
 import { useAuth } from "../lib/auth";
 import { PlayerCard, FormationSlot } from "../components/player-card";
-import { getClubLogo } from "../lib/clubs";
+import { useClubLogos } from "../lib/clubLogosContext";
 import type { Player, TeamWithPlayers, TransferWindow } from "@shared/schema";
 
 const BUDGET = 250;
@@ -309,6 +309,7 @@ function ClubBrowser({
   search: string;
   setSearch: (v: string) => void;
 }) {
+  const logos = useClubLogos();
   const [selectedClub, setSelectedClub] = useState<string | null>(null);
 
   // Players shown in list
@@ -370,7 +371,7 @@ function ClubBrowser({
             /* 3-column club logo grid */
             <div className="p-3 grid grid-cols-3 gap-2">
               {CLUBS.map((club) => {
-                const logo = getClubLogo(club);
+                const logo = logos[club];
                 const count = allPlayers.filter((p) => p.club === club && selectedIds.has(p.id)).length;
                 return (
                   <button
@@ -422,9 +423,9 @@ function ClubBrowser({
 
               {/* Logo + name */}
               <div className="flex items-center gap-4">
-                {getClubLogo(selectedClub) ? (
+                {logos[selectedClub] ? (
                   <img
-                    src={getClubLogo(selectedClub)!}
+                    src={logos[selectedClub]}
                     alt={selectedClub}
                     className="w-20 h-20 object-contain drop-shadow-2xl"
                     onError={(e) => { e.currentTarget.style.display = "none"; }}

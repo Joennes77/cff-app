@@ -1,5 +1,6 @@
 import type { Player } from "@shared/schema";
-import { getClubLogo, clubAbbr } from "../lib/clubs";
+import { clubAbbr } from "../lib/clubs";
+import { useClubLogos } from "../lib/clubLogosContext";
 
 interface PlayerCardProps {
   player: Player;
@@ -17,7 +18,8 @@ const POSITION_BADGE: Record<string, string> = {
 };
 
 function ClubLogo({ club, size = 24 }: { club: string; size?: number }) {
-  const url = getClubLogo(club);
+  const logos = useClubLogos();
+  const url = logos[club];
   if (url) {
     return (
       <img
@@ -104,7 +106,8 @@ export function FormationSlot({
   isStarter: boolean;
   onClick?: () => void;
 }) {
-  const logo = player ? getClubLogo(player.club) : null;
+  const logos = useClubLogos();
+  const logo = player ? logos[player.club] : null;
 
   return (
     <button
