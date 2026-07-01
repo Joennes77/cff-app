@@ -8,6 +8,7 @@ import { playersRouter } from "./routes/players.js";
 import { teamsRouter } from "./routes/teams.js";
 import { roundsRouter } from "./routes/rounds.js";
 import { adminRouter } from "./routes/admin.js";
+import logosRouter from "./routes/logos.js";
 import { db } from "./db/index.js";
 import { users } from "../../shared/schema.js";
 import { eq } from "drizzle-orm";
@@ -87,6 +88,7 @@ app.use("/api/players", requireAuth, playersRouter);
 app.use("/api/teams", requireAuth, teamsRouter);
 app.use("/api/rounds", requireAuth, roundsRouter);
 app.use("/api/admin", requireAdmin, adminRouter);
+app.use("/api/club-logos", logosRouter);
 
 /* ----------------------------------------------------------------
  * Error handler
