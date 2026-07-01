@@ -44,6 +44,7 @@ export default {
           foreground: "hsl(var(--destructive-foreground) / <alpha-value>)",
         },
         ring: "hsl(var(--ring) / <alpha-value>)",
+        gold: "hsl(var(--gold) / <alpha-value>)",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar) / <alpha-value>)",
           foreground: "hsl(var(--sidebar-foreground) / <alpha-value>)",
@@ -61,7 +62,7 @@ export default {
       },
       fontFamily: {
         sans: ["var(--font-sans)"],
-        display: ["var(--font-display)"],
+        display: ["var(--font-display)", "system-ui", "sans-serif"],
         mono: ["var(--font-mono)"],
       },
       keyframes: {

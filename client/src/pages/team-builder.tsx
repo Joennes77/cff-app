@@ -121,7 +121,7 @@ export default function TeamBuilder() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      <h1 className="font-display text-2xl font-bold mb-6">Team samenstellen</h1>
+      <h1 className="font-display text-4xl tracking-wider mb-6">Team Samenstellen</h1>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
         {/* Left: Formation + selected */}
@@ -147,7 +147,7 @@ export default function TeamBuilder() {
           </div>
 
           {/* Formation — simplified 4-3-3 layout */}
-          <div className="bg-gradient-to-b from-green-800 to-green-700 rounded-xl p-4">
+          <div className="pitch-bg rounded-2xl p-4 border border-white/10 shadow-2xl">
             <p className="text-center text-white/60 text-xs mb-4 font-medium tracking-widest uppercase">
               Formatie
             </p>
