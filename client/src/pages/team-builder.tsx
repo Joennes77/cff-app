@@ -10,8 +10,8 @@ const BUDGET = 250;
 const CLUBS = [
   "Ajax", "PSV", "Feyenoord", "AZ", "FC Utrecht", "FC Twente",
   "NEC Nijmegen", "Sparta Rotterdam", "Go Ahead Eagles", "PEC Zwolle",
-  "FC Groningen", "Heracles Almelo", "RKC Waalwijk", "NAC Breda",
-  "SC Heerenveen", "Willem II", "Almere City", "Fortuna Sittard",
+  "FC Groningen", "Excelsior", "Fortuna Sittard", "SC Cambuur",
+  "ADO Den Haag", "Willem II", "SC Heerenveen", "SC Telstar",
 ];
 const POSITIONS = ["GK", "DEF", "MID", "FWD"];
 
