@@ -16,13 +16,20 @@ const CLUBS = [
 ];
 const POSITIONS = ["GK", "DEF", "MID", "FWD"];
 
-// Which starter-array indices belong to each position
-const POSITION_SLOTS: Record<string, number[]> = {
-  GK:  [0],
-  DEF: [1, 2, 3, 4],
-  MID: [5, 6, 7],
-  FWD: [8, 9, 10],
+const FORMATIONS: Record<string, { def: number; mid: number; fwd: number }> = {
+  "4-3-3":   { def: 4, mid: 3, fwd: 3 },
+  "4-4-2":   { def: 4, mid: 4, fwd: 2 },
+  "4-2-3-1": { def: 4, mid: 5, fwd: 1 },
+  "3-5-2":   { def: 3, mid: 5, fwd: 2 },
+  "5-3-2":   { def: 5, mid: 3, fwd: 2 },
 };
+
+function buildPositionSlots(f: { def: number; mid: number; fwd: number }) {
+  const def = Array.from({ length: f.def }, (_, i) => i + 1);
+  const mid = Array.from({ length: f.mid }, (_, i) => i + 1 + f.def);
+  const fwd = Array.from({ length: f.fwd }, (_, i) => i + 1 + f.def + f.mid);
+  return { GK: [0], DEF: def, MID: mid, FWD: fwd };
+}
 
 export default function TeamBuilder() {
   const { id: poolId } = useParams<{ id: string }>();
@@ -44,7 +51,10 @@ export default function TeamBuilder() {
     queryFn: () => apiFetch("/api/players"),
   });
 
-  // 11 fixed slots: index 0=GK, 1-4=DEF, 5-7=MID, 8-10=FWD
+  const [formation, setFormation] = useState("4-3-3");
+  const positionSlots = useMemo(() => buildPositionSlots(FORMATIONS[formation]), [formation]);
+
+  // 11 fixed slots: index 0=GK, 1..def=DEF, ..=MID, ..=FWD (layout follows formation)
   const [starterSlots, setStarterSlots] = useState<(number | null)[]>(Array(11).fill(null));
   const [subIds, setSubIds] = useState<number[]>([]);
   const [filterClub, setFilterClub] = useState("");
@@ -103,9 +113,16 @@ export default function TeamBuilder() {
     return list;
   }, [allPlayers, filterClub, filterPos, search]);
 
+  function changeFormation(f: string) {
+    setFormation(f);
+    // Keep GK (slot 0), clear all outfield slots
+    setStarterSlots((prev) => prev.map((id, i) => (i === 0 ? id : null)));
+    setSubIds([]);
+  }
+
   function canAdd(player: Player): boolean {
     if (selectedIds.has(player.id)) return true;
-    const posSlots = POSITION_SLOTS[player.position] ?? [];
+    const posSlots = positionSlots[player.position as keyof typeof positionSlots] ?? [];
     if (posSlots.some((i) => starterSlots[i] === null)) return true;
     return subIds.length < 5;
   }
@@ -116,7 +133,7 @@ export default function TeamBuilder() {
       setSubIds((ids) => ids.filter((id) => id !== player.id));
       return;
     }
-    const posSlots = POSITION_SLOTS[player.position] ?? [];
+    const posSlots = positionSlots[player.position as keyof typeof positionSlots] ?? [];
     const emptySlot = posSlots.find((i) => starterSlots[i] === null);
     if (emptySlot !== undefined) {
       setStarterSlots((prev) => {
@@ -154,6 +171,26 @@ export default function TeamBuilder() {
 
         {/* ── LEFT: Pitch + Dugout ── */}
         <div className="space-y-4">
+
+          {/* Formation picker */}
+          <div className="bg-card border border-border/50 rounded-2xl px-5 py-3">
+            <p className="text-xs font-bold tracking-widest text-muted-foreground uppercase mb-2.5">Formatie</p>
+            <div className="flex gap-2 flex-wrap">
+              {Object.keys(FORMATIONS).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => changeFormation(f)}
+                  className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${
+                    formation === f
+                      ? "bg-primary text-black shadow-lg shadow-primary/30"
+                      : "bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted"
+                  }`}
+                >
+                  {f}
+                </button>
+              ))}
+            </div>
+          </div>
 
           {/* Budget bar */}
           <div className="bg-card border border-border/50 rounded-2xl px-5 py-3 flex items-center gap-4">
@@ -216,45 +253,52 @@ export default function TeamBuilder() {
               </svg>
 
               {/* Formation rows — FWD at top, GK at bottom */}
-              <div className="relative z-10 flex flex-col justify-between h-full py-5 px-3">
-                {/* Aanvallers (top) */}
-                <div>
-                  <p className="text-center text-white/30 text-[9px] font-bold tracking-widest uppercase mb-2">Aanvallers</p>
-                  <div className="flex justify-center gap-2">
-                    {starters.slice(8, 11).map((p, i) => (
-                      <FormationSlot key={i} player={p} isStarter />
-                    ))}
-                  </div>
-                </div>
+              {(() => {
+                const { def, mid, fwd } = FORMATIONS[formation];
+                const fwdStart = 1 + def + mid;
+                const midStart = 1 + def;
+                return (
+                  <div className="relative z-10 flex flex-col justify-between h-full py-5 px-3">
+                    {/* Aanvallers (top) */}
+                    <div>
+                      <p className="text-center text-white/30 text-[9px] font-bold tracking-widest uppercase mb-2">Aanvallers</p>
+                      <div className="flex justify-center gap-2">
+                        {starters.slice(fwdStart, fwdStart + fwd).map((p, i) => (
+                          <FormationSlot key={i} player={p} isStarter />
+                        ))}
+                      </div>
+                    </div>
 
-                {/* Middenvelders */}
-                <div>
-                  <p className="text-center text-white/30 text-[9px] font-bold tracking-widest uppercase mb-2">Middenvelders</p>
-                  <div className="flex justify-center gap-2">
-                    {starters.slice(5, 8).map((p, i) => (
-                      <FormationSlot key={i} player={p} isStarter />
-                    ))}
-                  </div>
-                </div>
+                    {/* Middenvelders */}
+                    <div>
+                      <p className="text-center text-white/30 text-[9px] font-bold tracking-widest uppercase mb-2">Middenvelders</p>
+                      <div className="flex justify-center gap-2">
+                        {starters.slice(midStart, midStart + mid).map((p, i) => (
+                          <FormationSlot key={i} player={p} isStarter />
+                        ))}
+                      </div>
+                    </div>
 
-                {/* Verdedigers */}
-                <div>
-                  <p className="text-center text-white/30 text-[9px] font-bold tracking-widest uppercase mb-2">Verdedigers</p>
-                  <div className="flex justify-center gap-2">
-                    {starters.slice(1, 5).map((p, i) => (
-                      <FormationSlot key={i} player={p} isStarter />
-                    ))}
-                  </div>
-                </div>
+                    {/* Verdedigers */}
+                    <div>
+                      <p className="text-center text-white/30 text-[9px] font-bold tracking-widest uppercase mb-2">Verdedigers</p>
+                      <div className="flex justify-center gap-2">
+                        {starters.slice(1, 1 + def).map((p, i) => (
+                          <FormationSlot key={i} player={p} isStarter />
+                        ))}
+                      </div>
+                    </div>
 
-                {/* Keeper (bottom) */}
-                <div>
-                  <p className="text-center text-white/30 text-[9px] font-bold tracking-widest uppercase mb-2">Keeper</p>
-                  <div className="flex justify-center">
-                    <FormationSlot player={starters[0]} isStarter />
+                    {/* Keeper (bottom) */}
+                    <div>
+                      <p className="text-center text-white/30 text-[9px] font-bold tracking-widest uppercase mb-2">Keeper</p>
+                      <div className="flex justify-center">
+                        <FormationSlot player={starters[0]} isStarter />
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                );
+              })()}
             </div>
 
             {/* ─── DUGOUT / BANK ─── */}
