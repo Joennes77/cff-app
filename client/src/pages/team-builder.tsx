@@ -22,6 +22,11 @@ const FORMATIONS: Record<string, { def: number; mid: number; fwd: number }> = {
   "4-2-3-1": { def: 4, mid: 5, fwd: 1 },
   "3-5-2":   { def: 3, mid: 5, fwd: 2 },
   "5-3-2":   { def: 5, mid: 3, fwd: 2 },
+  "3-4-3":   { def: 3, mid: 4, fwd: 3 },
+  "5-4-1":   { def: 5, mid: 4, fwd: 1 },
+  "4-5-1":   { def: 4, mid: 5, fwd: 1 },
+  "5-2-3":   { def: 5, mid: 2, fwd: 3 },
+  "3-3-4":   { def: 3, mid: 3, fwd: 4 },
 };
 
 function buildPositionSlots(f: { def: number; mid: number; fwd: number }) {
