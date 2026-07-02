@@ -7,7 +7,8 @@ import { PlayerCard, FormationSlot } from "../components/player-card";
 import { useClubLogos } from "../lib/clubLogosContext";
 import type { Player, TeamWithPlayers, TransferWindow } from "@shared/schema";
 
-const BUDGET = 250;
+const BUDGET = 100;
+const MAX_PER_CLUB = 2;
 const CLUBS = [
   "Ajax", "PSV", "Feyenoord", "AZ", "FC Utrecht", "FC Twente",
   "NEC Nijmegen", "Sparta Rotterdam", "Go Ahead Eagles", "PEC Zwolle",
@@ -127,6 +128,8 @@ export default function TeamBuilder() {
 
   function canAdd(player: Player): boolean {
     if (selectedIds.has(player.id)) return true;
+    const clubCount = selectedPlayers.filter((p) => p.club === player.club).length;
+    if (clubCount >= MAX_PER_CLUB) return false;
     const posSlots = positionSlots[player.position as keyof typeof positionSlots] ?? [];
     if (posSlots.some((i) => starterSlots[i] === null)) return true;
     return subIds.length < 5;
