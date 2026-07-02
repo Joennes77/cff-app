@@ -8,6 +8,7 @@ interface PlayerCardProps {
   isStarter?: boolean;
   onToggle?: () => void;
   compact?: boolean;
+  disabled?: boolean;
 }
 
 const POSITION_BADGE: Record<string, string> = {
@@ -46,13 +47,13 @@ function ClubLogo({ club, size = 24 }: { club: string; size?: number }) {
   );
 }
 
-export function PlayerCard({ player, selected, isStarter, onToggle, compact }: PlayerCardProps) {
+export function PlayerCard({ player, selected, isStarter, onToggle, compact, disabled }: PlayerCardProps) {
   return (
     <div
-      onClick={onToggle}
+      onClick={disabled ? undefined : onToggle}
       className={`
         relative flex items-center gap-3 rounded-xl border p-3 transition-all
-        ${onToggle ? "cursor-pointer hover:shadow-lg hover:shadow-primary/5" : ""}
+        ${disabled ? "opacity-35 cursor-not-allowed" : onToggle ? "cursor-pointer hover:shadow-lg hover:shadow-primary/5" : ""}
         ${selected
           ? "border-primary/60 bg-primary/10 ring-1 ring-primary/40"
           : "border-border/50 bg-card hover:border-border"}

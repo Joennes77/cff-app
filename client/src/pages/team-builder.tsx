@@ -16,6 +16,14 @@ const CLUBS = [
 ];
 const POSITIONS = ["GK", "DEF", "MID", "FWD"];
 
+// Which starter-array indices belong to each position
+const POSITION_SLOTS: Record<string, number[]> = {
+  GK:  [0],
+  DEF: [1, 2, 3, 4],
+  MID: [5, 6, 7],
+  FWD: [8, 9, 10],
+};
+
 export default function TeamBuilder() {
   const { id: poolId } = useParams<{ id: string }>();
   const { authFetch } = useAuth();
@@ -36,7 +44,8 @@ export default function TeamBuilder() {
     queryFn: () => apiFetch("/api/players"),
   });
 
-  const [starterIds, setStarterIds] = useState<number[]>([]);
+  // 11 fixed slots: index 0=GK, 1-4=DEF, 5-7=MID, 8-10=FWD
+  const [starterSlots, setStarterSlots] = useState<(number | null)[]>(Array(11).fill(null));
   const [subIds, setSubIds] = useState<number[]>([]);
   const [filterClub, setFilterClub] = useState("");
   const [filterPos, setFilterPos] = useState("");
@@ -44,22 +53,41 @@ export default function TeamBuilder() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
+  // Load existing team into position-aware slots (runs once when data arrives)
   useState(() => {
     if (existingTeam) {
-      setStarterIds(existingTeam.starters.map((p) => p.id));
+      const slots: (number | null)[] = Array(11).fill(null);
+      for (const p of existingTeam.starters) {
+        const posSlots = POSITION_SLOTS[p.position] ?? [];
+        const empty = posSlots.find((i) => slots[i] === null);
+        if (empty !== undefined) slots[empty] = p.id;
+      }
+      setStarterSlots(slots);
       setSubIds(existingTeam.subs.map((p) => p.id));
     }
   });
 
-  const selectedIds = useMemo(() => new Set([...starterIds, ...subIds]), [starterIds, subIds]);
-  const selectedPlayers = useMemo(() => allPlayers.filter((p) => selectedIds.has(p.id)), [allPlayers, selectedIds]);
-  const totalPrice = useMemo(() => selectedPlayers.reduce((s, p) => s + p.price, 0), [selectedPlayers]);
+  const starterIds = useMemo(
+    () => starterSlots.filter((id): id is number => id !== null),
+    [starterSlots]
+  );
+  const selectedIds = useMemo(
+    () => new Set([...starterIds, ...subIds]),
+    [starterIds, subIds]
+  );
+  const selectedPlayers = useMemo(
+    () => allPlayers.filter((p) => selectedIds.has(p.id)),
+    [allPlayers, selectedIds]
+  );
+  const totalPrice = useMemo(
+    () => selectedPlayers.reduce((s, p) => s + p.price, 0),
+    [selectedPlayers]
+  );
 
-  const starters = useMemo(() => {
-    const filled = starterIds.map((id) => allPlayers.find((p) => p.id === id) ?? null);
-    while (filled.length < 11) filled.push(null);
-    return filled;
-  }, [starterIds, allPlayers]);
+  const starters = useMemo(
+    () => starterSlots.map((id) => (id ? allPlayers.find((p) => p.id === id) ?? null : null)),
+    [starterSlots, allPlayers]
+  );
 
   const subs = useMemo(() => {
     const filled = subIds.map((id) => allPlayers.find((p) => p.id === id) ?? null);
@@ -75,14 +103,27 @@ export default function TeamBuilder() {
     return list;
   }, [allPlayers, filterClub, filterPos, search]);
 
+  function canAdd(player: Player): boolean {
+    if (selectedIds.has(player.id)) return true;
+    const posSlots = POSITION_SLOTS[player.position] ?? [];
+    if (posSlots.some((i) => starterSlots[i] === null)) return true;
+    return subIds.length < 5;
+  }
+
   function togglePlayer(player: Player) {
     if (selectedIds.has(player.id)) {
-      setStarterIds((ids) => ids.filter((id) => id !== player.id));
+      setStarterSlots((slots) => slots.map((id) => (id === player.id ? null : id)));
       setSubIds((ids) => ids.filter((id) => id !== player.id));
       return;
     }
-    if (starterIds.length < 11) {
-      setStarterIds((ids) => [...ids, player.id]);
+    const posSlots = POSITION_SLOTS[player.position] ?? [];
+    const emptySlot = posSlots.find((i) => starterSlots[i] === null);
+    if (emptySlot !== undefined) {
+      setStarterSlots((prev) => {
+        const next = [...prev];
+        next[emptySlot] = player.id;
+        return next;
+      });
     } else if (subIds.length < 5) {
       setSubIds((ids) => [...ids, player.id]);
     }
@@ -100,7 +141,7 @@ export default function TeamBuilder() {
   });
 
   const budgetOk = totalPrice <= BUDGET;
-  const teamComplete = starterIds.length === 11 && subIds.length === 5;
+  const teamComplete = starterSlots.every((s) => s !== null) && subIds.length === 5;
   const hasExistingTeam = !!existingTeam;
   const canSave = !hasExistingTeam || !!transferWindow;
   const budgetPct = Math.min((totalPrice / BUDGET) * 100, 100);
@@ -270,6 +311,7 @@ export default function TeamBuilder() {
           selectedIds={selectedIds}
           starterIds={starterIds}
           onToggle={togglePlayer}
+          canAdd={canAdd}
           filterPos={filterPos}
           setFilterPos={setFilterPos}
           search={search}
@@ -295,6 +337,7 @@ function ClubBrowser({
   selectedIds,
   starterIds,
   onToggle,
+  canAdd,
   filterPos,
   setFilterPos,
   search,
@@ -304,6 +347,7 @@ function ClubBrowser({
   selectedIds: Set<number>;
   starterIds: number[];
   onToggle: (p: Player) => void;
+  canAdd: (p: Player) => boolean;
   filterPos: string;
   setFilterPos: (v: string) => void;
   search: string;
@@ -362,7 +406,8 @@ function ClubBrowser({
                   player={p}
                   selected={selectedIds.has(p.id)}
                   isStarter={starterIds.includes(p.id)}
-                  onToggle={() => onToggle(p)}
+                  onToggle={canAdd(p) ? () => onToggle(p) : undefined}
+                  disabled={!canAdd(p)}
                   compact
                 />
               ))}
@@ -485,7 +530,8 @@ function ClubBrowser({
                 player={p}
                 selected={selectedIds.has(p.id)}
                 isStarter={starterIds.includes(p.id)}
-                onToggle={() => onToggle(p)}
+                onToggle={canAdd(p) ? () => onToggle(p) : undefined}
+                disabled={!canAdd(p)}
                 compact
               />
             ))}
